@@ -14,3 +14,6 @@ group :test do
 end
 
 gem 'sqlite3'
+gem 'sequel'
+gem 'bencode'
+gem 'lucky_case'

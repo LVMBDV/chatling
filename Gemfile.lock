@@ -24,6 +24,7 @@ GEM
     rubocop-ast (1.14.0)
       parser (>= 3.0.1.1)
     ruby-progressbar (1.11.0)
+    semantic (1.6.1)
     sequel (5.51.0)
     sqlite3 (1.4.2)
     unicode-display_width (2.1.0)
@@ -37,6 +38,7 @@ DEPENDENCIES
   minitest
   rake
   rubocop
+  semantic
   sequel
   sqlite3
 

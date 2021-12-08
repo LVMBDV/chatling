@@ -8,7 +8,8 @@ module Chatling
 
     def parse!
       dictionary = @bencode_stream.parse!
-      Message.build(dictionary)
+      kind = dictionary.delete('kind')
+      Message.build(kind, dictionary.transform_keys(&:to_sym))
     end
   end
 end

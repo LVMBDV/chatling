@@ -13,7 +13,7 @@ module Chatling
       end.compact
     end
 
-    def apply(dataset, context)
+    def apply_to(dataset, context)
       raise NotImplementedError.new("You must implement ##{__method__.to_s} for #{self.class.name}.")
     end
 
@@ -28,7 +28,7 @@ module Chatling
         @k = k
       end
 
-      def apply(dataset, context)
+      def apply_to(dataset, context)
         dataset.limit(@k)
       end
     end
@@ -38,7 +38,7 @@ module Chatling
         @fragment = fragment
       end
 
-      def apply(dataset, context)
+      def apply_to(dataset, context)
         dataset.where(Sequel.like(:body, "%#{@fragment}%"))
       end
     end
@@ -48,9 +48,9 @@ module Chatling
         @incoming = incoming
       end
 
-      def apply(dataset, context)
+      def apply_to(dataset, context)
         column = @incoming ? "to" : "from"
-        dataset.where({ column => context.client.identity })
+        dataset.where({ column => context[:client_identity] })
       end
     end
   end

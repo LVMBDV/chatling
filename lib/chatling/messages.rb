@@ -24,28 +24,41 @@ module Chatling
     def self.build(kind, arguments)
       MessageKinds.const_get(kind.pascal_case + 'Message').new(**arguments)
     end
+
+    def ==(other)
+      self.to_h == other.to_h
+    end
   end
 
   module MessageKinds
-    class WelcomeMessage < Message
+    class HelloMessage < Message
       attr_reader :version, :identity
 
-      def initialize(version:, identity:)
+      def initialize(version:, identity: nil)
         @version = version
         @identity = identity
       end
     end
 
     class GoodbyeMessage < Message
+      attr_reader :message
+
+      def initialize(message: nil)
+        @message = message
+      end
     end
 
     class ChatMessage < Message
       attr_reader :from, :to, :body
 
-      def initialize(from:, to:, body:)
+      def initialize(from: nil, to:, body:)
         @from = from
         @to = to
         @body = body
+      end
+
+      def populate_from(context)
+        @from = context[:client_identity]
       end
     end
 
@@ -57,17 +70,17 @@ module Chatling
       end
 
       def encode
-        hash = { "filters" => @filters.each_with_object({}) { |filter, hash| hash[filter.kind] = filter.arguments } }
+        hash = { 'filters' => @filters.each_with_object({}) { |filter, hash| hash[filter.kind] = filter.arguments } }
         hash['kind'] = self.kind
         hash.bencode
       end
     end
 
     class QueryResponseMessage < Message
-      attr_reader :messages
+      attr_reader :results
 
-      def initialize(messages:)
-        @messages = messages
+      def initialize(results:)
+        @results = results
       end
     end
   end

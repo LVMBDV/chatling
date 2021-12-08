@@ -4,7 +4,7 @@ require "sequel"
 module Chatling
   class QueryFilter
     def kind
-      self.class.name.split('::').snake_case
+      self.class.name.split('::').last.snake_case
     end
 
     def arguments
@@ -18,13 +18,13 @@ module Chatling
     end
 
     def self.build(kind, arguments)
-      QueryFilters.const_get(kind.pascal_case).new(arguments)
+      QueryFilters.const_get(kind.pascal_case).new(**arguments.transform_keys(&:to_sym))
     end
   end
 
   module QueryFilters
     class LastKMessages < QueryFilter
-      def initialize(k)
+      def initialize(k:)
         @k = k
       end
 
@@ -34,7 +34,7 @@ module Chatling
     end
 
     class MessageContains < QueryFilter
-      def initialize(fragment)
+      def initialize(fragment:)
         @fragment = fragment
       end
 
@@ -44,7 +44,7 @@ module Chatling
     end
 
     class MessageDirection < QueryFilter
-      def initialize(incoming)
+      def initialize(incoming:)
         @incoming = incoming
       end
 

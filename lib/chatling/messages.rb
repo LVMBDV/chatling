@@ -66,7 +66,9 @@ module Chatling
       attr_reader :filters
 
       def initialize(filters:)
-        @filters = filters.map { |kind, arguments| QueryFilter.build(kind, arguments) }
+        @filters = filters.map { |kind, arguments|
+          QueryFilter.build(kind, arguments)
+        }
       end
 
       def encode

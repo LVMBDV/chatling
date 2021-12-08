@@ -68,7 +68,8 @@ module Chatling
                   break
                 end
 
-                connection.send MessageKinds::HelloMessage.new(version: our_version.to_s, identity: client_identity).encode, 0
+                connection.send MessageKinds::HelloMessage.new(version: our_version.to_s, identity: client_identity).encode,
+                                0
                 state = :in_operation
               when :in_operation
                 case message
@@ -80,8 +81,10 @@ module Chatling
                   @database[:messages].insert from: message.from, to: message.to, body: message.body
                 when MessageKinds::QueryMessage
                   results = message.filters
-                  .reduce(@database[:messages]) { |dataset, filter| filter.apply_to(dataset, context) }
-                  .map { |row| row.slice(:from, :to, :body) }
+                                   .reduce(@database[:messages].where(Sequel[to: client_identity] | Sequel[from: client_identity])) { |dataset, filter|
+                    filter.apply_to(dataset, context)
+                  }.order(Sequel.desc(:id))
+                  results = results.map { |row| row.slice(:from, :to, :body, :id) }
 
                   connection.send MessageKinds::QueryResponseMessage.new(results: results).encode, 0
                 else
@@ -91,7 +94,7 @@ module Chatling
               end
             end
           rescue => error
-            goodbye_message = @send_errors ? error.inspect : "Something went wrong."
+            goodbye_message = @send_errors ? error.full_message : "Something went wrong."
             connection.send MessageKinds::GoodbyeMessage.new(message: goodbye_message).encode, 0
           else
             connection.send MessageKinds::GoodbyeMessage.new(message: goodbye_message).encode, 0

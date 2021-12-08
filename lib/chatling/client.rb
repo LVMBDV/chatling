@@ -23,6 +23,7 @@ module Chatling
       @server_port = server_port
       @thread = Thread.new do
         connection = nil
+
         begin
           connection = TCPSocket.new @server_host, @server_port
           message_parser = MessageParser.new connection
@@ -45,6 +46,7 @@ module Chatling
                   message = message_parser.parse!
                   break if message.is_a? MessageKinds::GoodbyeMessage
                   raise "You weren't supposed to send me that." unless message.is_a? MessageKinds::ChatMessage
+
                   @inbound_message_queue.push message
                 end
 
@@ -56,6 +58,7 @@ module Chatling
               if message.is_a? MessageKinds::QueryMessage
                 until (response = message_parser.parse!).is_a? MessageKinds::QueryResponseMessage
                   raise "You weren't supposed to send me that." unless response.is_a? MessageKinds::ChatMessage
+
                   @inbound_message_queue.push response
                 end
 
@@ -64,7 +67,7 @@ module Chatling
             end
           end
         rescue => error
-          goodbye_message = @send_errors ? error.inspect : "Something went wrong."
+          goodbye_message = @send_errors ? error.full_message : "Something went wrong."
           connection.send MessageKinds::GoodbyeMessage.new(message: goodbye_message).encode, 0
         ensure
           connection.close unless connection.nil?
@@ -108,7 +111,43 @@ module Chatling
 
     def receive_message
       raise "You aren't connected to a server." unless self.connected?
+
       @inbound_message_queue.pop
+    end
+
+    def receive_message!
+      raise "You aren't connected to a server." unless self.connected?
+
+      @inbound_message_queue.pop unless @inbound_message_queue.empty?
+    end
+
+    def say(message, to:)
+      send_message MessageKinds::ChatMessage.new(body: message, to: to)
+    end
+
+    # TODO - Add a timeout to this in case of malicious / incorrect implementations of the server.
+    def query(contains: nil, direction: nil, limit: nil)
+      raise "You must specify at least one filter." if [contains, direction, limit].all?(&:nil?)
+
+      unless [:inbound, :outbound, nil].include? direction
+        raise "Please specify a valid direction. Valid directions are :inbound and :outbound."
+      end
+
+      filters = []
+      filters.push(QueryFilters::ContainsFilter.new(fragment: contains)) unless contains.nil?
+      filters.push(QueryFilters::LastKMessages.new(k: limit)) unless limit.nil?
+      filters.push(QueryFilters::MessageDirection.new(incoming: direction == :inbound)) unless direction.nil?
+
+      send_message MessageKinds::QueryMessage.new(filters: filters.each_with_object({}) { |filter, hash|
+        hash[filter.kind] = filter.arguments
+      })
+
+      until (response = @inbound_message_queue.pop).is_a? MessageKinds::QueryResponseMessage
+        @inbound_message_queue.push response
+        sleep @polling_interval / 500
+      end
+
+      response.results
     end
   end
 end

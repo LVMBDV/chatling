@@ -3,6 +3,12 @@ GEM
   specs:
     ast (2.4.2)
     bencode (0.8.2)
+    byebug (11.1.3)
+    concurrent-ruby (1.1.9)
+    faker (2.19.0)
+      i18n (>= 1.6, < 2)
+    i18n (1.8.11)
+      concurrent-ruby (~> 1.0)
     lucky_case (1.1.0)
     minitest (5.14.4)
     parallel (1.21.0)
@@ -34,6 +40,8 @@ PLATFORMS
 
 DEPENDENCIES
   bencode
+  byebug
+  faker
   lucky_case
   minitest
   rake

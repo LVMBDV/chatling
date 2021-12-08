@@ -8,6 +8,7 @@ group :development do
   gem 'rake'
   gem 'rubocop'
   gem 'byebug'
+  gem 'cli-ui'
 end
 
 group :test do

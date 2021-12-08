@@ -31,6 +31,6 @@ class TestChat < Minitest::Test
                  Chatling::MessageKinds::ChatMessage.new(from: @bob.identity, to: @alice.identity, body: "bar")
 
     # chad doesn't get any messages
-    assert_nil @chad.receive_message!
+    assert_nil @chad.receive_message?
   end
 end

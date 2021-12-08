@@ -16,16 +16,16 @@ module Chatling
       @identity = nil
     end
 
-    def connect(server_host: "localhost", server_port: 1337)
+    def connect(host: "localhost", port: 1337)
       raise "You are already connected to a server." if self.connected?
 
-      @server_host = server_host
-      @server_port = server_port
+      @host = host
+      @port = port
       @thread = Thread.new do
         connection = nil
 
         begin
-          connection = TCPSocket.new @server_host, @server_port
+          connection = TCPSocket.new @host, @port
           message_parser = MessageParser.new connection
           state = :initializing
 
@@ -77,7 +77,7 @@ module Chatling
 
     def reconnect(send_errors: false)
       disconnect if connected?
-      connect(server_host: @server_host, server_port: @server_port, send_errors: send_errors)
+      connect(host: @host, port: @port, send_errors: send_errors)
     end
 
     def disconnect(goodbye_message: "Goodbye.", timeout: 5)
@@ -115,7 +115,7 @@ module Chatling
       @inbound_message_queue.pop
     end
 
-    def receive_message!
+    def receive_message?
       raise "You aren't connected to a server." unless self.connected?
 
       @inbound_message_queue.pop unless @inbound_message_queue.empty?
@@ -134,7 +134,7 @@ module Chatling
       end
 
       filters = []
-      filters.push(QueryFilters::ContainsFilter.new(fragment: contains)) unless contains.nil?
+      filters.push(QueryFilters::MessageContains.new(fragment: contains)) unless contains.nil?
       filters.push(QueryFilters::LastKMessages.new(k: limit)) unless limit.nil?
       filters.push(QueryFilters::MessageDirection.new(incoming: direction == :inbound)) unless direction.nil?
 

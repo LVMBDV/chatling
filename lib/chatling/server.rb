@@ -1,4 +1,5 @@
 require 'semantic'
+require 'set'
 require 'sequel'
 require 'socket'
 
@@ -84,7 +85,7 @@ module Chatling
                                    .reduce(@database[:messages].where(Sequel[to: client_identity] | Sequel[from: client_identity])) { |dataset, filter|
                     filter.apply_to(dataset, context)
                   }.order(Sequel.desc(:id))
-                  results = results.map { |row| row.slice(:from, :to, :body, :id) }
+                  results = results.map { |row| row.slice(:from, :to, :body) }
 
                   connection.send MessageKinds::QueryResponseMessage.new(results: results).encode, 0
                 else
